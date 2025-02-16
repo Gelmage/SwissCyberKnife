@@ -1,4 +1,3 @@
-# gui.py
 from PyQt6.QtWidgets import QMainWindow, QPlainTextEdit, QLineEdit, QPushButton, QVBoxLayout, QWidget
 from PyQt6.QtCore import Qt
 from bettercap_controller import BettercapSession
