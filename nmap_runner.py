@@ -1,4 +1,7 @@
 # In nmap_runner.py
+from PyQt6.QtCore import pyqtSignal, QThread
+
+
 class NmapScanner(QThread):
     output_signal = pyqtSignal(str)
     finished_signal = pyqtSignal(int)  # exit code
