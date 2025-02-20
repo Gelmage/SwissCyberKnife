@@ -1,9 +1,9 @@
-# bettercap_controller.py
 from PyQt6.QtCore import QObject, pyqtSignal
+
 
 class BettercapSession(QObject):
     log_signal = pyqtSignal(str)
-    
+
     def __init__(self, interface=None):
         super().__init__()
         self.interface = interface or "default"
