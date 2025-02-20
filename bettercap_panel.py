@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QPushButton, QHBoxLayout
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QPushButton, QHBoxLayout, QListWidgetItem
 from PyQt6.QtCore import Qt
 
 from external_process_thread import ExternalProcessThread
@@ -24,16 +24,42 @@ class BettercapPanel(QWidget):
         layout.addWidget(self.bettercap_list)
 
         # Populate the list with potential modules
-        items = [
-            "Network Recon (net.recon on)",
-            "Network Sniffing (net.sniff on)",
-            "Network Probing (net.probe on)",
-            "ARP Spoofing (arp.spoof on)",
-            "DNS Spoofing (dns.spoof on)",
-            "HTTP Proxy (http.proxy on)",
-            "HTTPS Proxy (https.proxy on)"
+        # Each entry has (display_text, tooltip_text)
+        bettercap_items = [
+            (
+                "Network Recon (net.recon on)",
+                "Scans the local network for devices (passively) and collects info about them."
+            ),
+            (
+                "Network Sniffing (net.sniff on)",
+                "Captures and displays network traffic in real time."
+            ),
+            (
+                "Network Probing (net.probe on)",
+                "Actively probes discovered hosts to identify hidden or unresponsive devices."
+            ),
+            (
+                "ARP Spoofing (arp.spoof on)",
+                "Intercept traffic between the gateway and hosts by poisoning ARP caches."
+            ),
+            (
+                "DNS Spoofing (dns.spoof on)",
+                "Redirect DNS queries to a chosen IP, often used in MITM to serve fake sites."
+            ),
+            (
+                "HTTP Proxy (http.proxy on)",
+                "Intercept and modify HTTP traffic (inject scripts, capture credentials, etc.)."
+            ),
+            (
+                "HTTPS Proxy (https.proxy on)",
+                "Attempt SSL stripping or interception of HTTPS traffic (risky, advanced)."
+            )
         ]
-        self.bettercap_list.addItems(items)
+
+        for display_text, tooltip_text in bettercap_items:
+            item = QListWidgetItem(display_text)
+            item.setToolTip(tooltip_text)
+            self.bettercap_list.addItem(item)
 
         # Double-click toggles run/stop
         self.bettercap_list.itemDoubleClicked.connect(self.on_item_double_clicked)
