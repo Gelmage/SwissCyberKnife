@@ -8,7 +8,7 @@ from main_window import MainWindow
 def ensure_privileges():
     """
     If not running as root, relaunch with sudo.
-    Adjust or remove if you already run 'sudo python3 main.py'.
+    Remove this if you already run it with 'sudo python3 main.py'.
     """
     if os.geteuid() != 0:
         print("Re-launching with sudo for root privileges...")

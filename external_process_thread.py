@@ -7,8 +7,7 @@ from PyQt6.QtCore import QThread, pyqtSignal
 class ExternalProcessThread(QThread):
     """
     Runs a shell command in a background thread, emitting each line of output.
-    Strips ANSI color codes so logs are readable.
-    On .stop(), sends SIGINT, waits 2s, then kills if needed.
+    Strips ANSI color codes. 'stop()' => SIGINT, wait 2s, then kill if needed.
     """
     output_signal = pyqtSignal(str)
     finished_signal = pyqtSignal(int)
@@ -41,7 +40,7 @@ class ExternalProcessThread(QThread):
             self.finished_signal.emit(-1)
 
     def stop(self):
-        """Send SIGINT, wait 2s, then kill if still alive."""
+        """Send SIGINT, wait 2s, kill if still alive."""
         if self.proc and self.proc.poll() is None:
             self.proc.send_signal(signal.SIGINT)
             time.sleep(2)

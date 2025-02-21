@@ -8,7 +8,7 @@ from external_process_thread import ExternalProcessThread
 
 class BettercapPanel(QWidget):
     """
-    Large set of Bettercap commands for v2.33. Some might not exist, open bettercap to check.
+    Large set of Bettercap commands for v2.33.x.
     Hover for tooltips describing each command.
     """
     def __init__(self, parent_main):
@@ -25,42 +25,24 @@ class BettercapPanel(QWidget):
         layout.addWidget(self.bettercap_list)
 
         commands = [
-            (
-                "Net Probe (bettercap -eval net.probe on)",
-                "Actively probe the network for hidden hosts."
-            ),
-            (
-                "ARP Spoof (bettercap -eval arp.spoof on)",
-                "Perform ARP poisoning, intercept traffic on LAN."
-            ),
-            (
-                "DNS Spoof (bettercap -eval dns.spoof on)",
-                "Redirect DNS queries to a chosen IP. Usually combine with ARP spoof."
-            ),
-            (
-                "Net Sniff (bettercap -eval net.sniff on)",
-                "Capture packets in real time, might require 'net.probe' on some versions."
-            ),
-            (
-                "Any Proxy (bettercap -eval any.proxy on)",
-                "Intercept TCP/UDP traffic for any protocol. Potentially advanced usage."
-            ),
-            (
-                "HTTP Proxy (bettercap -eval http.proxy on)",
-                "Intercept/modify HTTP traffic. Great for injecting scripts or capturing data."
-            ),
-            (
-                "HTTPS Proxy (bettercap -eval https.proxy on)",
-                "Attempt SSL stripping or intercept TLS. Risky, advanced usage."
-            ),
-            (
-                "Wifi Recon (bettercap -eval wifi.recon on)",
-                "Scan for nearby Wi-Fi networks/clients (requires a Wi-Fi interface)."
-            ),
-            (
-                "Ticker (bettercap -eval ticker on)",
-                "Periodically prints a small summary of discovered endpoints."
-            )
+            ("Net Probe (bettercap -eval net.probe on)",
+             "Actively probe the network for hidden hosts."),
+            ("ARP Spoof (bettercap -eval arp.spoof on)",
+             "ARP poisoning to intercept traffic."),
+            ("DNS Spoof (bettercap -eval dns.spoof on)",
+             "Redirect DNS queries to a chosen IP."),
+            ("Net Sniff (bettercap -eval net.sniff on)",
+             "Capture packets in real time."),
+            ("Any Proxy (bettercap -eval any.proxy on)",
+             "Intercept TCP/UDP traffic for any protocol."),
+            ("HTTP Proxy (bettercap -eval http.proxy on)",
+             "Intercept/modify HTTP traffic."),
+            ("HTTPS Proxy (bettercap -eval https.proxy on)",
+             "Attempt SSL stripping or intercept TLS traffic."),
+            ("Wifi Recon (bettercap -eval wifi.recon on)",
+             "Scan for nearby Wi-Fi networks/clients."),
+            ("Ticker (bettercap -eval ticker on)",
+             "Periodically prints a summary of discovered endpoints.")
         ]
 
         for display_text, tip in commands:
@@ -107,7 +89,7 @@ class BettercapPanel(QWidget):
         if cmd_str in self.running_commands:
             self.stop_command(cmd_str)
         else:
-            self.parent_main.log_bettercap(f"'{cmd_str}' not currently running.")
+            self.parent_main.log_bettercap(f"'{cmd_str}' not running.")
 
     def run_command(self, cmd_str):
         if cmd_str in self.running_commands:
@@ -140,7 +122,6 @@ class BettercapPanel(QWidget):
 
     @staticmethod
     def parse_command(full_text: str) -> str:
-        # e.g. "ARP Spoof (bettercap -eval arp.spoof on)" => "bettercap -eval arp.spoof on"
         if "(" in full_text and ")" in full_text:
             return full_text.split("(")[-1].split(")")[0].strip()
         return ""

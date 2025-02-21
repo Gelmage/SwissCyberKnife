@@ -8,8 +8,7 @@ from external_process_thread import ExternalProcessThread
 
 class ResponderPanel(QWidget):
     """
-    Responder commands with hover tooltips.
-    Adjust if your environment differs.
+    Responder with multiple commands, hover tooltips.
     """
     def __init__(self, parent_main):
         super().__init__()
@@ -25,26 +24,16 @@ class ResponderPanel(QWidget):
         layout.addWidget(self.responder_list)
 
         commands = [
-            (
-                "Basic (responder -I eth0)",
-                "Start Responder on eth0 with default poisoning (LLMNR, NBT-NS, MDNS)."
-            ),
-            (
-                "All Flags (responder -I eth0 -rdwv)",
-                "Respond to many protocols, verbose logging, etc."
-            ),
-            (
-                "Analyze Only (responder -I eth0 -A)",
-                "No poisoning, just analyzing requests on eth0."
-            ),
-            (
-                "All but NetBIOS (responder -I eth0 -N)",
-                "Disable NetBIOS, only respond to LLMNR/MDNS."
-            ),
-            (
-                "Any (responder -I any -dw)",
-                "Listen on all interfaces, for some advanced setups."
-            )
+            ("Basic (responder -I eth0)",
+             "Default LLMNR, NBT-NS, MDNS poisoning on eth0."),
+            ("All Flags (responder -I eth0 -rdwv)",
+             "Respond to many protocols, verbose logging."),
+            ("Analyze Only (responder -I eth0 -A)",
+             "No poisoning, just analyzing requests on eth0."),
+            ("All but NetBIOS (responder -I eth0 -N)",
+             "Disable NetBIOS, only respond to LLMNR/MDNS."),
+            ("Any (responder -I any -dw)",
+             "Listen on all interfaces.")
         ]
 
         for display_text, tip in commands:
@@ -123,7 +112,6 @@ class ResponderPanel(QWidget):
 
     @staticmethod
     def parse_command(full_text: str) -> str:
-        # e.g. "All Flags (responder -I eth0 -rdwv)" => "responder -I eth0 -rdwv"
         if "(" in full_text and ")" in full_text:
             return full_text.split("(")[-1].split(")")[0].strip()
         return ""

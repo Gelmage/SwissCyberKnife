@@ -8,9 +8,10 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 
 from bettercap_panel import BettercapPanel
-from nmap_panel import NmapPanel
+from nmap_panel import NmapPanel  # QTree-based categories
 from ettercap_panel import EttercapPanel
 from responder_panel import ResponderPanel
+from driftnet_panel import DriftnetPanel  # <--- Import our new Driftnet panel
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -18,13 +19,12 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Swiss Cyber Knife")
         self.resize(1000, 600)
 
-        # Central widget + main layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
 
         #
-        # 1) GLOBAL OPTIONS ROW (target, ports, interface)
+        # GLOBAL OPTIONS (Target, Ports, Interface)
         #
         global_options_layout = QHBoxLayout()
         main_layout.addLayout(global_options_layout)
@@ -51,22 +51,20 @@ class MainWindow(QMainWindow):
         global_options_layout.addWidget(self.global_iface_combo)
 
         #
-        # 2) QSplitter: top area vs bottom logs
+        # SPLITTER: top area vs bottom logs
         #
         self.vertical_splitter = QSplitter(Qt.Orientation.Vertical)
         main_layout.addWidget(self.vertical_splitter, stretch=1)
 
         #
-        # 2a) TOP SPLITTER: side nav + stacked widget
+        # TOP SPLITTER: side nav + stacked widget
         #
         self.top_splitter = QSplitter(Qt.Orientation.Horizontal)
         self.top_splitter.setChildrenCollapsible(False)
 
-        # Left nav
         self.nav_list = QListWidget()
         self.top_splitter.addWidget(self.nav_list)
 
-        # Stacked widget
         from PyQt6.QtWidgets import QStackedWidget
         self.stack = QStackedWidget()
         self.top_splitter.addWidget(self.stack)
@@ -74,7 +72,7 @@ class MainWindow(QMainWindow):
         self.vertical_splitter.addWidget(self.top_splitter)
 
         #
-        # 2b) BOTTOM: tabbed logs
+        # BOTTOM TABBED LOGS
         #
         self.tabbed_logs_container = QWidget()
         logs_layout = QVBoxLayout(self.tabbed_logs_container)
@@ -103,9 +101,17 @@ class MainWindow(QMainWindow):
         self.tab_responder.setPlaceholderText("Responder Output...")
         self.log_tabs.addTab(self.tab_responder, "Responder")
 
+        # -----------------------------
+        # ADD DRIFTNET LOG TAB
+        # -----------------------------
+        self.tab_driftnet = QPlainTextEdit()
+        self.tab_driftnet.setReadOnly(True)
+        self.tab_driftnet.setPlaceholderText("Driftnet Output...")
+        self.log_tabs.addTab(self.tab_driftnet, "Driftnet")
+
         self.vertical_splitter.addWidget(self.tabbed_logs_container)
 
-        # Optionally set stretch so top gets more space than logs
+        # Optionally adjust the split ratio
         self.vertical_splitter.setStretchFactor(0, 4)
         self.vertical_splitter.setStretchFactor(1, 2)
 
@@ -115,16 +121,20 @@ class MainWindow(QMainWindow):
         # Create Panels
         #
         self.bettercap_panel = BettercapPanel(parent_main=self)
-        self.nmap_panel = NmapPanel(parent_main=self)
+        self.nmap_panel = NmapPanel(parent_main=self)   # QTree categories
         self.ettercap_panel = EttercapPanel(parent_main=self)
         self.responder_panel = ResponderPanel(parent_main=self)
+        self.driftnet_panel = DriftnetPanel(parent_main=self)
 
+        # Add them in the order we want to appear in nav_list
         self.stack.addWidget(self.bettercap_panel)   # index 0
         self.stack.addWidget(self.nmap_panel)        # index 1
         self.stack.addWidget(self.ettercap_panel)    # index 2
         self.stack.addWidget(self.responder_panel)   # index 3
+        self.stack.addWidget(self.driftnet_panel)    # index 4
 
-        nav_items = ["Bettercap", "Nmap", "Ettercap", "Responder"]
+        # Nav items (sidebar). Must match the order we added panels
+        nav_items = ["Bettercap", "Nmap", "Ettercap", "Responder", "Driftnet"]
         for i, label in enumerate(nav_items):
             item = QListWidgetItem(label)
             self.nav_list.addItem(item)
@@ -158,6 +168,15 @@ class MainWindow(QMainWindow):
             self.tab_responder.clear()
             self.tab_responder.appendPlainText("...[older logs truncated]...\n")
         self.tab_responder.appendPlainText(message)
+
+    # -------------------------------------------------
+    # ADD A DRIFTNET LOGGING METHOD
+    # -------------------------------------------------
+    def log_driftnet(self, message: str):
+        if self.tab_driftnet.blockCount() > self.MAX_LOG_LINES:
+            self.tab_driftnet.clear()
+            self.tab_driftnet.appendPlainText("...[older logs truncated]...\n")
+        self.tab_driftnet.appendPlainText(message)
 
     #
     # Global Accessors
@@ -196,9 +215,15 @@ class MainWindow(QMainWindow):
             if self.responder_panel.running_commands:
                 threads_active.append('Responder')
 
+        # Driftnet
+        if getattr(self.driftnet_panel, 'running_commands', None):
+            if self.driftnet_panel.running_commands:
+                threads_active.append('Driftnet')
+
         if threads_active:
             reply = QMessageBox.question(
-                self, "Tools Running",
+                self,
+                "Tools Running",
                 f"{', '.join(threads_active)} still running. Stop them & exit?",
                 QMessageBox.Yes | QMessageBox.No,
                 QMessageBox.No
@@ -207,7 +232,6 @@ class MainWindow(QMainWindow):
                 event.ignore()
                 return
             else:
-                # Stop them
                 if 'Nmap' in threads_active and self.nmap_panel.process_thread:
                     self.nmap_panel.stop_scan()
 
@@ -225,6 +249,11 @@ class MainWindow(QMainWindow):
                     for _, thr in list(self.responder_panel.running_commands.items()):
                         thr.stop()
                     self.responder_panel.running_commands.clear()
+
+                if 'Driftnet' in threads_active:
+                    for _, thr in list(self.driftnet_panel.running_commands.items()):
+                        thr.stop()
+                    self.driftnet_panel.running_commands.clear()
 
                 time.sleep(1)
 
