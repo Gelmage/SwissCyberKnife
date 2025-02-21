@@ -1,70 +1,75 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QListWidget, QPushButton, QHBoxLayout, QListWidgetItem
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QListWidget, QPushButton, QHBoxLayout,
+    QListWidgetItem
+)
 from PyQt6.QtCore import Qt
 
 from external_process_thread import ExternalProcessThread
 
 class BettercapPanel(QWidget):
     """
-    Panel containing the Bettercap commands list, run/stop buttons, etc.
-    This is embedded in the main window via QStackedWidget.
+    Large set of Bettercap commands for v2.33. Some might not exist, open bettercap to check.
+    Hover for tooltips describing each command.
     """
     def __init__(self, parent_main):
         super().__init__()
-        self.parent_main = parent_main  # reference to MainWindow for logging
-        self.running_commands = {}      # track running commands (str->thread)
-
+        self.parent_main = parent_main
+        self.running_commands = {}
         self.init_ui()
 
     def init_ui(self):
         layout = QVBoxLayout(self)
         self.setLayout(layout)
 
-        # List widget for Bettercap modules
         self.bettercap_list = QListWidget()
         layout.addWidget(self.bettercap_list)
 
-        # Populate the list with potential modules
-        # Each entry has (display_text, tooltip_text)
-        bettercap_items = [
+        commands = [
             (
-                "Network Recon (net.recon on)",
-                "Scans the local network for devices (passively) and collects info about them."
+                "Net Probe (bettercap -eval net.probe on)",
+                "Actively probe the network for hidden hosts."
             ),
             (
-                "Network Sniffing (net.sniff on)",
-                "Captures and displays network traffic in real time."
+                "ARP Spoof (bettercap -eval arp.spoof on)",
+                "Perform ARP poisoning, intercept traffic on LAN."
             ),
             (
-                "Network Probing (net.probe on)",
-                "Actively probes discovered hosts to identify hidden or unresponsive devices."
+                "DNS Spoof (bettercap -eval dns.spoof on)",
+                "Redirect DNS queries to a chosen IP. Usually combine with ARP spoof."
             ),
             (
-                "ARP Spoofing (arp.spoof on)",
-                "Intercept traffic between the gateway and hosts by poisoning ARP caches."
+                "Net Sniff (bettercap -eval net.sniff on)",
+                "Capture packets in real time, might require 'net.probe' on some versions."
             ),
             (
-                "DNS Spoofing (dns.spoof on)",
-                "Redirect DNS queries to a chosen IP, often used in MITM to serve fake sites."
+                "Any Proxy (bettercap -eval any.proxy on)",
+                "Intercept TCP/UDP traffic for any protocol. Potentially advanced usage."
             ),
             (
-                "HTTP Proxy (http.proxy on)",
-                "Intercept and modify HTTP traffic (inject scripts, capture credentials, etc.)."
+                "HTTP Proxy (bettercap -eval http.proxy on)",
+                "Intercept/modify HTTP traffic. Great for injecting scripts or capturing data."
             ),
             (
-                "HTTPS Proxy (https.proxy on)",
-                "Attempt SSL stripping or interception of HTTPS traffic (risky, advanced)."
+                "HTTPS Proxy (bettercap -eval https.proxy on)",
+                "Attempt SSL stripping or intercept TLS. Risky, advanced usage."
+            ),
+            (
+                "Wifi Recon (bettercap -eval wifi.recon on)",
+                "Scan for nearby Wi-Fi networks/clients (requires a Wi-Fi interface)."
+            ),
+            (
+                "Ticker (bettercap -eval ticker on)",
+                "Periodically prints a small summary of discovered endpoints."
             )
         ]
 
-        for display_text, tooltip_text in bettercap_items:
+        for display_text, tip in commands:
             item = QListWidgetItem(display_text)
-            item.setToolTip(tooltip_text)
+            item.setToolTip(tip)
             self.bettercap_list.addItem(item)
 
-        # Double-click toggles run/stop
         self.bettercap_list.itemDoubleClicked.connect(self.on_item_double_clicked)
 
-        # Horizontal layout for run/stop buttons
         btn_layout = QHBoxLayout()
         layout.addLayout(btn_layout)
 
@@ -77,84 +82,65 @@ class BettercapPanel(QWidget):
         btn_layout.addWidget(self.btn_stop)
 
     def on_item_double_clicked(self, item):
-        """Double-click toggles run/stop for that command."""
         if not item:
             return
-        command_part = self.parse_command(item.text())
-        if not command_part:
-            self.parent_main.log_bettercap("Error: can't parse item text.")
-            return
-
-        # If it’s running, stop it; otherwise start
-        if command_part in self.running_commands:
-            self.stop_command(command_part)
+        cmd_str = self.parse_command(item.text())
+        if cmd_str in self.running_commands:
+            self.stop_command(cmd_str)
         else:
-            self.run_command(command_part)
+            self.run_command(cmd_str)
 
     def run_selected_command(self):
-        """Run the currently selected command."""
         item = self.bettercap_list.currentItem()
         if not item:
             self.parent_main.log_bettercap("No command selected.")
             return
-        command_part = self.parse_command(item.text())
-        if not command_part:
-            self.parent_main.log_bettercap("Error: can't parse command text.")
-            return
-        self.run_command(command_part)
+        cmd_str = self.parse_command(item.text())
+        self.run_command(cmd_str)
 
     def stop_selected_command(self):
-        """Stop the currently selected command if it's running."""
         item = self.bettercap_list.currentItem()
         if not item:
             self.parent_main.log_bettercap("No command selected.")
             return
-        command_part = self.parse_command(item.text())
-        if not command_part:
-            self.parent_main.log_bettercap("Error: can't parse command text.")
-            return
-
-        if command_part in self.running_commands:
-            self.stop_command(command_part)
+        cmd_str = self.parse_command(item.text())
+        if cmd_str in self.running_commands:
+            self.stop_command(cmd_str)
         else:
-            self.parent_main.log_bettercap(f"'{command_part}' is not currently running.")
+            self.parent_main.log_bettercap(f"'{cmd_str}' not currently running.")
 
-    def run_command(self, command_part: str):
-        """Spawn a Bettercap subprocess in a background thread."""
-        if command_part in self.running_commands:
-            self.parent_main.log_bettercap(f"'{command_part}' is already running.")
+    def run_command(self, cmd_str):
+        if cmd_str in self.running_commands:
+            self.parent_main.log_bettercap(f"'{cmd_str}' is already running.")
             return
 
-        cmd_list = ["bettercap", "-eval", command_part]
-        self.parent_main.log_bettercap(f"[*] Starting: {' '.join(cmd_list)}")
+        self.parent_main.log_bettercap(f"[*] Starting: {cmd_str}")
+        cmd_list = cmd_str.split()
 
         thread = ExternalProcessThread(cmd_list)
         thread.output_signal.connect(self.parent_main.log_bettercap)
-        thread.finished_signal.connect(lambda code, c=command_part: self.on_command_finished(code, c))
+        thread.finished_signal.connect(lambda code, c=cmd_str: self.on_command_finished(code, c))
         thread.start()
 
-        self.running_commands[command_part] = thread
+        self.running_commands[cmd_str] = thread
 
-    def stop_command(self, command_part: str):
-        """Kill the process for a running command."""
-        thread = self.running_commands.get(command_part)
-        if thread:
-            self.parent_main.log_bettercap(f"[*] Stopping: {command_part}")
-            thread.stop()
-            # Remove from dict once we forcibly kill it
-            del self.running_commands[command_part]
+    def stop_command(self, cmd_str):
+        thr = self.running_commands.get(cmd_str)
+        if thr:
+            self.parent_main.log_bettercap(f"[*] Stopping: {cmd_str}")
+            thr.stop()
+            del self.running_commands[cmd_str]
         else:
-            self.parent_main.log_bettercap(f"No thread found for '{command_part}'")
+            self.parent_main.log_bettercap(f"No thread found for '{cmd_str}'")
 
-    def on_command_finished(self, exit_code, command_part):
-        """Called when a Bettercap command process exits on its own."""
-        if command_part in self.running_commands:
-            del self.running_commands[command_part]
-        self.parent_main.log_bettercap(f"[+] '{command_part}' finished (exit code {exit_code}).")
+    def on_command_finished(self, exit_code, cmd_str):
+        if cmd_str in self.running_commands:
+            del self.running_commands[cmd_str]
+        self.parent_main.log_bettercap(f"[+] '{cmd_str}' finished (exit code {exit_code}).")
 
     @staticmethod
     def parse_command(full_text: str) -> str:
-        """Extract the portion in parentheses, e.g. '(net.sniff on)' -> 'net.sniff on'."""
+        # e.g. "ARP Spoof (bettercap -eval arp.spoof on)" => "bettercap -eval arp.spoof on"
         if "(" in full_text and ")" in full_text:
             return full_text.split("(")[-1].split(")")[0].strip()
         return ""

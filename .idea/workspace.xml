@@ -5,8 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0a57fb81-80fd-4e43-a29e-9fd7a033eb92" name="Changes" comment="added requirements file">
+      <change afterPath="$PROJECT_DIR$/ettercap_panel.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/responder_panel.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bettercap_controller.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/bettercap_panel.py" beforeDir="false" afterPath="$PROJECT_DIR$/bettercap_panel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/external_process_thread.py" beforeDir="false" afterPath="$PROJECT_DIR$/external_process_thread.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_window.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_window.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nmap_panel.py" beforeDir="false" afterPath="$PROJECT_DIR$/nmap_panel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nmap_runner.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,10 +71,15 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/jerry/Programming/SwissCyberKnife&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/jerry/Programming/ZSwissCyberKnife_Backup&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;com.github.copilot.settings.ApplicationConfigurable&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/../ZSwissCyberKnife_Backup" />
+    </key>
+  </component>
   <component name="RunManager" selected="Python.main">
     <configuration type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="SwissCyberKnife" />
@@ -157,9 +170,9 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Python.main" />
       <item itemvalue="Python.__init__" />
       <item itemvalue="Python.gui" />
-      <item itemvalue="Python.main" />
     </list>
     <recent_temporary>
       <list>
@@ -198,7 +211,15 @@
       <option name="project" value="LOCAL" />
       <updated>1740019628070</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="added requirements file">
+      <option name="closed" value="true" />
+      <created>1740021656877</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1740021656877</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

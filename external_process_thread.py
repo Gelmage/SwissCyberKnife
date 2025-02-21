@@ -1,13 +1,19 @@
 import subprocess
+import signal
+import time
+import re
 from PyQt6.QtCore import QThread, pyqtSignal
 
 class ExternalProcessThread(QThread):
     """
     Runs a shell command in a background thread, emitting each line of output.
-    Keeps the GUI responsive and allows real-time logging.
+    Strips ANSI color codes so logs are readable.
+    On .stop(), sends SIGINT, waits 2s, then kills if needed.
     """
     output_signal = pyqtSignal(str)
     finished_signal = pyqtSignal(int)
+
+    ANSI_ESCAPE = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
     def __init__(self, cmd_list):
         super().__init__()
@@ -22,12 +28,12 @@ class ExternalProcessThread(QThread):
                 stderr=subprocess.STDOUT,
                 text=True
             )
-            # Read output line-by-line
             while True:
                 line = self.proc.stdout.readline()
                 if not line:
                     break
-                self.output_signal.emit(line.rstrip("\n"))
+                clean_line = self.ANSI_ESCAPE.sub('', line)
+                self.output_signal.emit(clean_line.rstrip('\n'))
             exit_code = self.proc.wait()
             self.finished_signal.emit(exit_code)
         except Exception as e:
@@ -35,8 +41,11 @@ class ExternalProcessThread(QThread):
             self.finished_signal.emit(-1)
 
     def stop(self):
-        """Terminate the underlying process if it's still running."""
+        """Send SIGINT, wait 2s, then kill if still alive."""
         if self.proc and self.proc.poll() is None:
-            self.proc.kill()
+            self.proc.send_signal(signal.SIGINT)
+            time.sleep(2)
+            if self.proc.poll() is None:
+                self.proc.kill()
         self.quit()
         self.wait()
